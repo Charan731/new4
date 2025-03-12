@@ -1,10 +1,111 @@
-<html>
-     <head>
-        <title>ok</title>
-    </head> 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Current Balance - ₹1 Global Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #ffe4ec, #fff8f8);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .balance {
+            font-size: 26px;
+            font-weight: bold;
+            color: #e91e63;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #388e3c;
+        }
+
+        .note-section {
+            background-color: #fff0f5;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #e91e63;
+            text-align: left;
+        }
+
+        .note-section h2 {
+            color: #d81b60;
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+
+        .note-section ul {
+            list-style: none;
+            padding-left: 15px;
+        }
+
+        .note-section ul li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .note-section ul li::before {
+            content: "✔";
+            position: absolute;
+            left: 0;
+            color: #4caf50;
+        }
+
+        .final-note {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 16px;
+            color: #444;
+            text-align: center;
+        }
+    </style>
+</head>
 <body>
+
+<div class="container">
     <div class="balance">Current Balance: <span id="balance">0</span></div>
-        <button onclick="fetchBalance()">Refresh Balance</button>
+    <button onclick="fetchBalance()">Refresh Balance</button>
+
+    <div class="note-section">
+        <h2>Note:</h2>
+        <ul>
+            <li>The current balance is globally the same (increased & updated instantly)</li>
+            <li>Balance never decreases</li>
+            <li>Balance increases by 1 for each ₹1 successful payment</li>
+            <li>You cannot pay more than ₹1</li>
+        </ul>
+    </div>
+
+    <div class="final-note">
+        👉 Balance is "how many people paid 1 Rupee"
+    </div>
+</div>
+
 <script>
     const backendURL = "https://old-olo5.onrender.com/balance";
 
@@ -14,9 +115,9 @@
 
     async function fetchBalance() {
         try {
-            const response = await fetch(backendURL, { 
+            const response = await fetch(backendURL, {
                 method: "GET",
-                headers: { "new-user": hasUserPaid() ? "false" : "true" } 
+                headers: { "new-user": hasUserPaid() ? "false" : "true" }
             });
 
             if (!response.ok) throw new Error("Failed to fetch balance");
@@ -37,5 +138,6 @@
 
     fetchBalance();
 </script>
+
 </body>
 </html>
