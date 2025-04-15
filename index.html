@@ -83,19 +83,25 @@
             color: #444;
             text-align: center;
         }
+
+        .expired-message {
+            display: none;
+            color: red;
+            font-weight: bold;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="main-container">
     <div class="balance">Total People paid ₹1: <span id="balance">0</span></div>
-    
 
     <div class="note-section">
         <h2>Note:</h2>
         <ul>
-            <li>If you don't see the total people refresh the page or wait 30 sec  </li>
-            <li>The number of people paid ₹1 is globally the same number(increased & updated instantly)</li>
+            <li>If you don't see the total people refresh the page or wait 30 sec</li>
+            <li>The number of people paid ₹1 is globally the same number (increased & updated instantly)</li>
             <li>Number never decreases</li>
             <li>Number increases by 1 for each ₹1 successful payment</li>
             <li>You cannot pay more than ₹1</li>
@@ -103,12 +109,17 @@
     </div>
 
     <div class="final-note">
-        👉"If you like the concept share it with your friends"
+        👉 "If you like the concept share it with your friends"
+    </div>
+
+    <div class="expired-message" id="expired-message">
+        This page has expired or already been used. Please pay ₹1 again to access.
     </div>
 </div>
 
 <script>
     const backendURL = "https://old-olo5.onrender.com/balance";
+    const TOKEN_EXPIRY_TIME = 3 * 60 * 1000; // 3 minutes in milliseconds
 
     function hasUserPaid() {
         return localStorage.getItem("paid") === "true";
@@ -130,14 +141,49 @@
         }
     }
 
+    function expirePage() {
+        document.getElementById("main-container").innerHTML = '';
+        document.getElementById("expired-message").style.display = "block";
+    }
+
+    // --- Expiry Check ---
+    function checkExpiry() {
+        const paidTime = localStorage.getItem("paidTime");
+
+        if (!paidTime) {
+            expirePage();
+            return;
+        }
+
+        const now = Date.now();
+        if (now - parseInt(paidTime) > TOKEN_EXPIRY_TIME) {
+            localStorage.removeItem("paid");
+            localStorage.removeItem("paidTime");
+            expirePage();
+        } else {
+            setTimeout(() => {
+                localStorage.removeItem("paid");
+                localStorage.removeItem("paidTime");
+                expirePage();
+            }, TOKEN_EXPIRY_TIME - (now - parseInt(paidTime)));
+        }
+    }
+
+    // Listen for Razorpay message
     window.addEventListener("message", (event) => {
         if (event.data && event.data.razorpay_payment_id) {
             localStorage.setItem("paid", "true");
+            localStorage.setItem("paidTime", Date.now().toString());
             setTimeout(fetchBalance, 5000);
         }
     }, false);
 
-    fetchBalance();
+    if (!hasUserPaid()) {
+        expirePage();
+    } else {
+        checkExpiry();
+        fetchBalance();
+    }
 </script>
 
 </body>
