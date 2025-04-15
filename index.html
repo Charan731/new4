@@ -83,25 +83,19 @@
             color: #444;
             text-align: center;
         }
-
-        .expired-message {
-            display: none;
-            color: red;
-            font-weight: bold;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
 
-<div class="container" id="main-container">
+<div class="container">
     <div class="balance">Total People paid ₹1: <span id="balance">0</span></div>
+    
 
     <div class="note-section">
         <h2>Note:</h2>
         <ul>
-            <li>If you don't see the total people refresh the page or wait 30 sec</li>
-            <li>The number of people paid ₹1 is globally the same number (increased & updated instantly)</li>
+            <li>If you don't see the total people refresh the page or wait 30 sec  </li>
+            <li>The number of people paid ₹1 is globally the same number(increased & updated instantly)</li>
             <li>Number never decreases</li>
             <li>Number increases by 1 for each ₹1 successful payment</li>
             <li>You cannot pay more than ₹1</li>
@@ -109,25 +103,15 @@
     </div>
 
     <div class="final-note">
-        👉 "If you like the concept share it with your friends"
-    </div>
-
-    <div class="expired-message" id="expired-message">
-        This page has expired or already been used. Please pay ₹1 again to access.
+        👉"If you like the concept share it with your friends"
     </div>
 </div>
 
 <script>
     const backendURL = "https://old-olo5.onrender.com/balance";
-    const TOKEN_EXPIRY_TIME = 3 * 60 * 1000; // 3 minutes
 
     function hasUserPaid() {
-        const paid = localStorage.getItem("paid") === "true";
-        const paidTime = localStorage.getItem("paidTime");
-        if (!paid || !paidTime) return false;
-
-        const now = Date.now();
-        return now - parseInt(paidTime) <= TOKEN_EXPIRY_TIME;
+        return localStorage.getItem("paid") === "true";
     }
 
     async function fetchBalance() {
@@ -146,37 +130,15 @@
         }
     }
 
-    function expirePage() {
-        document.body.innerHTML = `<div style="text-align:center; margin-top:100px; font-size:20px; color:red;">
-            This page has expired. Please pay ₹1 again to access.
-        </div>`;
-    }
-
-    function startExpiryTimer() {
-        setTimeout(() => {
-            localStorage.removeItem("paid");
-            localStorage.removeItem("paidTime");
-            expirePage();
-        }, TOKEN_EXPIRY_TIME);
-    }
-
     window.addEventListener("message", (event) => {
         if (event.data && event.data.razorpay_payment_id) {
             localStorage.setItem("paid", "true");
-            localStorage.setItem("paidTime", Date.now().toString());
-            setTimeout(fetchBalance, 3000); // Delay balance fetch slightly
-            startExpiryTimer();
+            setTimeout(fetchBalance, 5000);
         }
     }, false);
 
-    // On page load
-    if (hasUserPaid()) {
-        fetchBalance();
-        startExpiryTimer();
-    } else {
-        // Let the page load, but hide balance until payment
-        document.getElementById("balance").textContent = "-";
-    }
+    fetchBalance();
 </script>
+
 </body>
 </html>
