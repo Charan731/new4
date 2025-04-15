@@ -119,10 +119,15 @@
 
 <script>
     const backendURL = "https://old-olo5.onrender.com/balance";
-    const TOKEN_EXPIRY_TIME = 3 * 60 * 1000; // 3 minutes in milliseconds
+    const TOKEN_EXPIRY_TIME = 3 * 60 * 1000; // 3 minutes
 
     function hasUserPaid() {
-        return localStorage.getItem("paid") === "true";
+        const paid = localStorage.getItem("paid") === "true";
+        const paidTime = localStorage.getItem("paidTime");
+        if (!paid || !paidTime) return false;
+
+        const now = Date.now();
+        return now - parseInt(paidTime) <= TOKEN_EXPIRY_TIME;
     }
 
     async function fetchBalance() {
@@ -142,49 +147,36 @@
     }
 
     function expirePage() {
-        document.getElementById("main-container").innerHTML = '';
-        document.getElementById("expired-message").style.display = "block";
+        document.body.innerHTML = `<div style="text-align:center; margin-top:100px; font-size:20px; color:red;">
+            This page has expired. Please pay ₹1 again to access.
+        </div>`;
     }
 
-    // --- Expiry Check ---
-    function checkExpiry() {
-        const paidTime = localStorage.getItem("paidTime");
-
-        if (!paidTime) {
-            expirePage();
-            return;
-        }
-
-        const now = Date.now();
-        if (now - parseInt(paidTime) > TOKEN_EXPIRY_TIME) {
+    function startExpiryTimer() {
+        setTimeout(() => {
             localStorage.removeItem("paid");
             localStorage.removeItem("paidTime");
             expirePage();
-        } else {
-            setTimeout(() => {
-                localStorage.removeItem("paid");
-                localStorage.removeItem("paidTime");
-                expirePage();
-            }, TOKEN_EXPIRY_TIME - (now - parseInt(paidTime)));
-        }
+        }, TOKEN_EXPIRY_TIME);
     }
 
-    // Listen for Razorpay message
     window.addEventListener("message", (event) => {
         if (event.data && event.data.razorpay_payment_id) {
             localStorage.setItem("paid", "true");
             localStorage.setItem("paidTime", Date.now().toString());
-            setTimeout(fetchBalance, 5000);
+            setTimeout(fetchBalance, 3000); // Delay balance fetch slightly
+            startExpiryTimer();
         }
     }, false);
 
-    if (!hasUserPaid()) {
-        expirePage();
-    } else {
-        checkExpiry();
+    // On page load
+    if (hasUserPaid()) {
         fetchBalance();
+        startExpiryTimer();
+    } else {
+        // Let the page load, but hide balance until payment
+        document.getElementById("balance").textContent = "-";
     }
 </script>
-
 </body>
 </html>
