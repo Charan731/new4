@@ -133,7 +133,7 @@
     window.addEventListener("message", (event) => {
         if (event.data && event.data.razorpay_payment_id) {
             localStorage.setItem("paid", "true");
-            setTimeout(fetchBalance, 5000);
+            setTimeout(fetchBalance, 0);
         }
     }, false);
 
