@@ -89,13 +89,12 @@
 
 <div class="container">
     <div class="balance">Total People paid ₹1: <span id="balance">0</span></div>
-    
 
     <div class="note-section">
         <h2>Note:</h2>
         <ul>
-            <li>If you don't see the total people refresh the page or wait 30 sec  </li>
-            <li>The number of people paid ₹1 is globally the same number(increased & updated instantly)</li>
+            <li>If you don't see the total people refresh the page or wait 30 sec</li>
+            <li>The number of people paid ₹1 is globally the same number (increased & updated instantly)</li>
             <li>Number never decreases</li>
             <li>Number increases by 1 for each ₹1 successful payment</li>
             <li>You cannot pay more than ₹1</li>
@@ -103,12 +102,14 @@
     </div>
 
     <div class="final-note">
-        👉"If you like the concept share it with your friends"
+        👉 "If you like the concept share it with your friends"
     </div>
 </div>
 
 <script>
-    const backendURL = "https://old-olo5.onrender.com/balance";
+    // 🔴 IMPORTANT: change this to your Render Django backend URL
+    // Example: "https://one-rupee-django.onrender.com/balance"
+    const backendURL = "https://YOUR-DJANGO-URL.onrender.com/balance";
 
     function hasUserPaid() {
         return localStorage.getItem("paid") === "true";
