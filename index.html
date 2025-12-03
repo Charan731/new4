@@ -1,64 +1,144 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const bodyParser = require("body-parser");
-const crypto = require("crypto");
-const cors = require("cors");
-require("dotenv").config();
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Total people - ₹1 Global Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #ffe4ec, #fff8f8);
+            margin: 0;
+            padding: 20px;
+        }
 
-const app = express();
-const PORT = process.env.PORT || 3000;
+        .container {
+            max-width: 950px;
+            margin: auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+        }
 
-app.use(cors());
-app.use(bodyParser.json());
+        .balance {
+            font-size: 26px;
+            font-weight: bold;
+            color: #e91e63;
+            margin-bottom: 20px;
+        }
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-}).then(() => console.log("MongoDB Connected"))
-  .catch(err => console.error("MongoDB Connection Error:", err));
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
 
-// Define Balance Schema
-const BalanceSchema = new mongoose.Schema({ amount: { type: Number, default: 0 } });
-const Balance = mongoose.model("Balance", BalanceSchema);
+        button:hover {
+            background-color: #388e3c;
+        }
 
-// Webhook for Razorpay Payment
-app.post("/razorpay-webhook", async (req, res) => {
-    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+        .note-section {
+            background-color: #fff0f5;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 15px;
+            border-left: 6px solid #e91e63;
+            text-align: left;
+        }
+
+        .note-section h2 {
+            color: #d81b60;
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+
+        .note-section ul {
+            list-style: none;
+            padding-left: 15px;
+        }
+
+        .note-section ul li {
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .note-section ul li::before {
+            content: "✔";
+            position: absolute;
+            left: 0;
+            color: #4caf50;
+        }
+
+        .final-note {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 16px;
+            color: #444;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="balance">Total People paid ₹1: <span id="balance">0</span></div>
     
-    const signature = req.headers["x-razorpay-signature"];
-    const expectedSignature = crypto.createHmac("sha256", secret)
-        .update(JSON.stringify(req.body))
-        .digest("hex");
 
-    if (signature !== expectedSignature) {
-        console.error("Invalid Webhook Signature");
-        return res.status(400).json({ error: "Invalid Signature" });
+    <div class="note-section">
+        <h2>Note:</h2>
+        <ul>
+            <li>If you don't see the total people refresh the page or wait 30 sec  </li>
+            <li>The number of people paid ₹1 is globally the same number(increased & updated instantly)</li>
+            <li>Number never decreases</li>
+            <li>Number increases by 1 for each ₹1 successful payment</li>
+            <li>You cannot pay more than ₹1</li>
+        </ul>
+    </div>
+
+    <div class="final-note">
+        👉"If you like the concept share it with your friends"
+    </div>
+</div>
+
+<script>
+    const backendURL = "https://old-olo5.onrender.com/balance";
+
+    function hasUserPaid() {
+        return localStorage.getItem("paid") === "true";
     }
 
-    if (req.body.event === "payment.captured") {
+    async function fetchBalance() {
         try {
-            const result = await Balance.findOneAndUpdate({}, { $inc: { amount: 1 } }, { upsert: true, new: true });
-            console.log("Balance Updated:", result.amount);
+            const response = await fetch(backendURL, {
+                method: "GET",
+                headers: { "new-user": hasUserPaid() ? "false" : "true" }
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch balance");
+
+            const data = await response.json();
+            document.getElementById("balance").textContent = data.balance;
         } catch (error) {
-            console.error("Error updating balance:", error);
+            console.error("Error fetching balance:", error);
         }
     }
 
-    res.status(200).json({ success: true });
-});
+    window.addEventListener("message", (event) => {
+        if (event.data && event.data.razorpay_payment_id) {
+            localStorage.setItem("paid", "true");
+            setTimeout(fetchBalance, 0);
+        }
+    }, false);
 
-// API to Fetch Balance
-app.get("/balance", async (req, res) => {
-    try {
-        const balance = await Balance.findOne();
-        res.json({ balance: balance ? balance.amount : 0 });
-    } catch (error) {
-        console.error("Error fetching balance:", error);
-        res.status(500).json({ error: "Failed to fetch balance" });
-    }
-});
+    fetchBalance();
+</script>
 
-app.listen(PORT, () => {
-    console.log(Server running on port ${PORT});
-});
+</body>
+</html>
